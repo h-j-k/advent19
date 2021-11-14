@@ -1,0 +1,57 @@
+name:                advent19
+version:             0.1.0.0
+github:              "h-j-k/advent19"
+license:             Apache-2.0
+author:              "H-J-K"
+maintainer:          "example@example.com"
+copyright:           "2021 H-J-K"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/h-j-k/advent19#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- array
+- text
+- containers
+
+library:
+  source-dirs: src
+
+executables:
+  advent19-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - advent19
+
+tests:
+  advent19-test:
+    main:                AdventOfCodeTest.hs
+    source-dirs:
+    - input
+    - test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - advent19
+    - hspec
+    - hspec-contrib
+    - HUnit
+    - QuickCheck
