@@ -31,14 +31,14 @@ toPoints n point ((direction, offset) : points) =
     newPoints = map (shift point direction) [1 .. offset]
 toPoints _ _ [] = Map.empty
 
-part1 :: [[Text.Text]] -> Int
-part1 wires = minimum $ map (\(x, y) -> abs x + abs y) $ Map.keys $ Map.intersection firstWire secondWire
+solver :: (WirePoints -> [Int]) -> [[Text.Text]] -> Int
+solver mapper wires = minimum $ mapper $ Map.intersectionWith (+) firstWire secondWire
   where
     firstWire = toPoints 1 (0, 0) $ map convert $ head wires
     secondWire = toPoints 1 (0, 0) $ map convert $ last wires
 
+part1 :: [[Text.Text]] -> Int
+part1 = solver (map (\(x, y) -> abs x + abs y) . Map.keys)
+
 part2 :: [[Text.Text]] -> Int
-part2 wires = minimum $ Map.elems $ Map.intersectionWith (+) firstWire secondWire
-  where
-    firstWire = toPoints 1 (0, 0) $ map convert $ head wires
-    secondWire = toPoints 1 (0, 0) $ map convert $ last wires
+part2 = solver Map.elems
