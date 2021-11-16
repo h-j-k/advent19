@@ -1,5 +1,5 @@
 module Day03Test
-  ( day03Test,
+  ( runTest,
   )
 where
 
@@ -7,10 +7,10 @@ import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import Day03
 import Test.Hspec
-import Util
+import TestUtil
 
-day03Test :: IO ()
-day03Test = hspec $ do
+runTest :: IO ()
+runTest = hspec $ do
   describe "Day 03" $ do
     it "Part 1" $ do
       input <- fmap Text.lines (Text.readFile "./input/Day03.txt")

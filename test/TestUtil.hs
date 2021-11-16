@@ -1,4 +1,4 @@
-module Util
+module TestUtil
   ( readNumbers,
     readNumbersCommaDelimited,
     readStringsCommaDelimited,

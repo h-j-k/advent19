@@ -63,7 +63,7 @@ test-suite advent19-test
       Day02Test
       Day03Test
       Day04Test
-      Util
+      TestUtil
       Paths_advent19
   hs-source-dirs:
       input
