@@ -18,4 +18,4 @@ runTest = hspec $ do
 
     it "Part 2" $ do
       input <- fmap Text.lines (Text.readFile "./input/Day06.txt")
-      part2 input `shouldBe` (0 :: Int)
+      part2 input `shouldBe` (472 :: Int)
