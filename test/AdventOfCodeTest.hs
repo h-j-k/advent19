@@ -1,4 +1,4 @@
-import Day04Test
+import Day05Test
 
 main :: IO ()
 main = runTest

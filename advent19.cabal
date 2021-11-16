@@ -29,6 +29,7 @@ library
       Day02
       Day03
       Day04
+      Day05
   other-modules:
       Paths_advent19
   hs-source-dirs:
@@ -63,6 +64,7 @@ test-suite advent19-test
       Day02Test
       Day03Test
       Day04Test
+      Day05Test
       TestUtil
       Paths_advent19
   hs-source-dirs:
