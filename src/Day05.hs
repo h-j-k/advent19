@@ -6,8 +6,11 @@ where
 
 import qualified Data.Array as Array
 
-intCode :: Int -> Array.Array Int Int -> Maybe (Array.Array Int Int)
-intCode p instructions =
+compose2 :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
+compose2 f g a b = f $ g a b
+
+intCode :: Int -> Int -> Array.Array Int Int -> Maybe (Array.Array Int Int)
+intCode systemId p instructions =
   let value = instructions Array.! p
       opCode = value `mod` 100
       mode1 = (div value 100 `mod` 10) == 0
@@ -17,20 +20,32 @@ intCode p instructions =
         _ ->
           let nextP = p + 1 + paramCount opCode
            in if nextP <= snd (Array.bounds instructions)
-                then
-                  let newProgram = case opCode of
-                        1 -> Just (process mode1 mode2 (+))
-                        2 -> Just (process mode1 mode2 (*))
-                        3 -> Just $ instructions Array.// [(get False (p + 1), 1)]
-                        4 -> Just instructions
-                        _ -> Nothing
-                   in newProgram >>= intCode nextP
+                then case opCode of
+                  1 -> intCode systemId (p + 4) (process mode1 mode2 (+))
+                  2 -> intCode systemId (p + 4) (process mode1 mode2 (*))
+                  3 -> intCode systemId (p + 2) (instructions Array.// [(get False (p + 1), systemId)])
+                  4 -> intCode systemId (p + 2) instructions
+                  5 ->
+                    if get mode1 (p + 1) == 0
+                      then intCode systemId (p + 3) instructions
+                      else intCode systemId (get mode2 (p + 2)) instructions
+                  6 ->
+                    if get mode1 (p + 1) /= 0
+                      then intCode systemId (p + 3) instructions
+                      else intCode systemId (get mode2 (p + 2)) instructions
+                  7 -> intCode systemId (p + 4) (process mode1 mode2 (fromEnum `compose2` (<)))
+                  8 -> intCode systemId (p + 4) (process mode1 mode2 (fromEnum `compose2` (==)))
+                  _ -> Nothing
                 else Nothing
   where
     paramCount 1 = 3
     paramCount 2 = 3
     paramCount 3 = 1
     paramCount 4 = 1
+    paramCount 5 = 2
+    paramCount 6 = 2
+    paramCount 7 = 3
+    paramCount 8 = 3
     paramCount _ = 0
 
     get True x = instructions Array.! (instructions Array.! x)
@@ -39,11 +54,13 @@ intCode p instructions =
     process mode1 mode2 mapper =
       instructions Array.// [(get False (p + 3), mapper (get mode1 (p + 1)) (get mode2 (p + 2)))]
 
-part1 :: [Int] -> Int
-part1 inputs =
-  case intCode 0 (Array.listArray (0, length inputs - 1) inputs) of
-    Just answer -> maximum answer
-    Nothing -> error "Error!"
+solver :: Int -> [Int] -> Int
+solver systemId inputs = case intCode systemId 0 (Array.listArray (0, length inputs - 1) inputs) of
+  Just answer -> maximum answer
+  Nothing -> error "Error!"
 
-part2 :: [Int] -> Int -> Int
-part2 _ _ = 0
+part1 :: [Int] -> Int
+part1 = solver 1
+
+part2 :: [Int] -> Int
+part2 = solver 5
