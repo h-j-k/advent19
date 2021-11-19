@@ -12,34 +12,37 @@ import Data.Maybe
 compose2 :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 compose2 f g a b = f $ g a b
 
-intCode :: [Int] -> Int -> Writer.Writer [Int] (Array.Array Int Int) -> Maybe [Int]
-intCode ampInputs p programState =
+intCode :: Bool -> [Int] -> Int -> Writer.Writer [Int] (Array.Array Int Int) -> Maybe [Int]
+intCode isNested ampInputs p programState =
   let value = instructions Array.! p
       opCode = value `mod` 100
       mode1 = (div value 100 `mod` 10) == 0
       mode2 = (div value 1000 `mod` 10) == 0
    in case opCode of
-        99 -> Just output
+        99 -> if isNested then Just [] else Just output
         _ ->
           let nextP = p + 1 + paramCount opCode
            in if nextP <= snd (Array.bounds instructions)
                 then case opCode of
-                  1 -> intCode ampInputs (p + 4) (process mode1 mode2 (+))
-                  2 -> intCode ampInputs (p + 4) (process mode1 mode2 (*))
+                  1 -> intCode isNested ampInputs (p + 4) (process mode1 mode2 (+))
+                  2 -> intCode isNested ampInputs (p + 4) (process mode1 mode2 (*))
                   3 -> case ampInputs of
                     [] -> Nothing
-                    ampInput : rest -> intCode rest (p + 2) $ (>>) programState $ return $ instructions Array.// [(get False (p + 1), ampInput)]
-                  4 -> intCode ampInputs (p + 2) $ programState >> Writer.writer (instructions, [get mode1 (p + 1)])
+                    ampInput : rest -> intCode isNested rest (p + 2) $ (>>) programState $ return $ instructions Array.// [(get False (p + 1), ampInput)]
+                  4 ->
+                    if isNested
+                      then Just (get mode1 (p + 1) : fromMaybe [] (intCode isNested ampInputs (p + 2) $ programState >> Writer.writer (instructions, [])))
+                      else intCode isNested ampInputs (p + 2) $ programState >> Writer.writer (instructions, [get mode1 (p + 1)])
                   5 ->
                     if get mode1 (p + 1) == 0
-                      then intCode ampInputs (p + 3) programState
-                      else intCode ampInputs (get mode2 (p + 2)) programState
+                      then intCode isNested ampInputs (p + 3) programState
+                      else intCode isNested ampInputs (get mode2 (p + 2)) programState
                   6 ->
                     if get mode1 (p + 1) /= 0
-                      then intCode ampInputs (p + 3) programState
-                      else intCode ampInputs (get mode2 (p + 2)) programState
-                  7 -> intCode ampInputs (p + 4) (process mode1 mode2 (fromEnum `compose2` (<)))
-                  8 -> intCode ampInputs (p + 4) (process mode1 mode2 (fromEnum `compose2` (==)))
+                      then intCode isNested ampInputs (p + 3) programState
+                      else intCode isNested ampInputs (get mode2 (p + 2)) programState
+                  7 -> intCode isNested ampInputs (p + 4) (process mode1 mode2 (fromEnum `compose2` (<)))
+                  8 -> intCode isNested ampInputs (p + 4) (process mode1 mode2 (fromEnum `compose2` (==)))
                   _ -> Nothing
                 else Nothing
   where
@@ -63,9 +66,24 @@ intCode ampInputs p programState =
 findSignal :: Int -> Array.Array Int Int -> [Int] -> Maybe Int
 findSignal signal _ [] = Just signal
 findSignal signal instructions (phase : rest) =
-  case intCode [phase, signal] 0 $ Writer.writer (instructions, []) of
+  case intCode False [phase, signal] 0 $ Writer.writer (instructions, []) of
     Just [nextSignal] -> findSignal nextSignal instructions rest
     _ -> Nothing
+
+runIntCode :: Array.Array Int Int -> [Int] -> [Int]
+runIntCode instructions inputs = case intCode True inputs 0 $ Writer.writer (instructions, []) of
+  Just r -> r
+  Nothing -> error "Unexpected result"
+
+findSignal2 :: Array.Array Int Int -> [Int] -> Maybe Int
+findSignal2 instructions [phase1, phase2, phase3, phase4, phase5] =
+  let ampA = runIntCode instructions $ phase1 : 0 : ampE
+      ampB = runIntCode instructions $ phase2 : ampA
+      ampC = runIntCode instructions $ phase3 : ampB
+      ampD = runIntCode instructions $ phase4 : ampC
+      ampE = runIntCode instructions $ phase5 : ampD
+   in Just $ last ampE
+findSignal2 _ _ = error "Five phases required"
 
 solver :: [Int] -> (Array.Array Int Int -> [Int] -> Maybe Int) -> [Int] -> Int
 solver phases processor inputs = maximum $ map (fromMaybe 0 . processor instructions) $ List.permutations phases
@@ -73,7 +91,7 @@ solver phases processor inputs = maximum $ map (fromMaybe 0 . processor instruct
     instructions = Array.listArray (0, length inputs - 1) inputs
 
 part1 :: [Int] -> Int
-part1 = solver [0 .. 4] (findSignal 0)
+part1 = solver [0 .. 4] $ findSignal 0
 
 part2 :: [Int] -> Int
-part2 _ = 0
+part2 = solver [5 .. 9] findSignal2

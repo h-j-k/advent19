@@ -18,4 +18,4 @@ runTest = hspec $ do
 
     it "Part 2" $ do
       input <- fmap Text.lines (Text.readFile "./input/Day07.txt")
-      part2 (readNumbersCommaDelimited input) `shouldBe` (0 :: Int)
+      part2 (readNumbersCommaDelimited input) `shouldBe` (19741286 :: Int)
