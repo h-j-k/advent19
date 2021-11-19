@@ -31,6 +31,7 @@ library
       Day04
       Day05
       Day06
+      Day07
   other-modules:
       Paths_advent19
   hs-source-dirs:
@@ -39,6 +40,7 @@ library
       array
     , base >=4.7 && <5
     , containers
+    , mtl
     , text
   default-language: Haskell2010
 
@@ -54,6 +56,7 @@ executable advent19-exe
     , array
     , base >=4.7 && <5
     , containers
+    , mtl
     , text
   default-language: Haskell2010
 
@@ -67,6 +70,7 @@ test-suite advent19-test
       Day04Test
       Day05Test
       Day06Test
+      Day07Test
       TestUtil
       Paths_advent19
   hs-source-dirs:
@@ -82,5 +86,6 @@ test-suite advent19-test
     , containers
     , hspec
     , hspec-contrib
+    , mtl
     , text
   default-language: Haskell2010
