@@ -28,11 +28,15 @@ intCode isNested ampInputs p programState =
                   2 -> intCode isNested ampInputs (p + 4) (process mode1 mode2 (*))
                   3 -> case ampInputs of
                     [] -> Nothing
-                    ampInput : rest -> intCode isNested rest (p + 2) $ (>>) programState $ return $ instructions Array.// [(get False (p + 1), ampInput)]
+                    ampInput : rest ->
+                      intCode isNested rest (p + 2) $
+                        (>>) programState $ return $ instructions Array.// [(get False (p + 1), ampInput)]
                   4 ->
-                    if isNested
-                      then Just (get mode1 (p + 1) : fromMaybe [] (intCode isNested ampInputs (p + 2) $ programState >> Writer.writer (instructions, [])))
-                      else intCode isNested ampInputs (p + 2) $ programState >> Writer.writer (instructions, [get mode1 (p + 1)])
+                    let r = get mode1 (p + 1)
+                        nextRun s = intCode isNested ampInputs (p + 2) $ programState >> Writer.writer (instructions, s)
+                     in if isNested
+                          then Just (r : fromMaybe [] (nextRun []))
+                          else nextRun [r]
                   5 ->
                     if get mode1 (p + 1) == 0
                       then intCode isNested ampInputs (p + 3) programState
@@ -70,14 +74,12 @@ findSignal signal instructions (phase : rest) =
     Just [nextSignal] -> findSignal nextSignal instructions rest
     _ -> Nothing
 
-runIntCode :: Array.Array Int Int -> [Int] -> [Int]
-runIntCode instructions inputs = case intCode True inputs 0 $ Writer.writer (instructions, []) of
-  Just r -> r
-  Nothing -> error "Unexpected result"
-
 findSignal2 :: Array.Array Int Int -> [Int] -> Maybe Int
 findSignal2 instructions [phase1, phase2, phase3, phase4, phase5] =
-  let ampA = runIntCode instructions $ phase1 : 0 : ampE
+  let runIntCode code inputs = case intCode True inputs 0 $ Writer.writer (code, []) of
+        Just r -> r
+        Nothing -> error "Unexpected result"
+      ampA = runIntCode instructions $ phase1 : 0 : ampE
       ampB = runIntCode instructions $ phase2 : ampA
       ampC = runIntCode instructions $ phase3 : ampB
       ampD = runIntCode instructions $ phase4 : ampC
