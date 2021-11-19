@@ -17,4 +17,13 @@ runTest = hspec $ do
 
     it "Part 2" $ do
       input <- fmap Text.lines (Text.readFile "./input/Day08.txt")
-      part2 (head input) `shouldBe` (0 :: Int)
+      part2 (head input)
+        `shouldBe` ( [ "x  x  xx   xx  x  x x  x ",
+                       "x  x x  x x  x x  x x  x ",
+                       "x  x x    x    x  x xxxx ",
+                       "x  x x xx x    x  x x  x ",
+                       "x  x x  x x  x x  x x  x ",
+                       " xx   xxx  xx   xx  x  x "
+                     ] ::
+                       [String]
+                   )
