@@ -60,18 +60,20 @@ intCode ampInputs p programState =
     process mode1 mode2 mapper =
       (>>) programState $ return $ instructions Array.// [(get False (p + 3), mapper (get mode1 (p + 1)) (get mode2 (p + 2)))]
 
-intCodeStart :: Array.Array Int Int -> [Int] -> Maybe [Int]
-intCodeStart instructions ampInputs = intCode ampInputs 0 $ Writer.writer (instructions, [])
-
 findSignal :: Int -> Array.Array Int Int -> [Int] -> Maybe Int
 findSignal signal _ [] = Just signal
 findSignal signal instructions (phase : rest) =
-  case intCodeStart instructions [phase, signal] of
+  case intCode [phase, signal] 0 $ Writer.writer (instructions, []) of
     Just [nextSignal] -> findSignal nextSignal instructions rest
     _ -> Nothing
 
+solver :: [Int] -> (Array.Array Int Int -> [Int] -> Maybe Int) -> [Int] -> Int
+solver phases processor inputs = maximum $ map (fromMaybe 0 . processor instructions) $ List.permutations phases
+  where
+    instructions = Array.listArray (0, length inputs - 1) inputs
+
 part1 :: [Int] -> Int
-part1 inputs = maximum [fromMaybe 0 $ findSignal 0 (Array.listArray (0, length inputs - 1) inputs) ampInputs | ampInputs <- List.permutations [0 .. 4]]
+part1 = solver [0 .. 4] (findSignal 0)
 
 part2 :: [Int] -> Int
 part2 _ = 0
